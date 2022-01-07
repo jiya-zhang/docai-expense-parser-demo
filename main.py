@@ -126,7 +126,7 @@ def process_receipt(event, context):
                 for entity in document.entities:
                     entity_type = str(entity.type_)
                     # TODO: this might not be working
-                    if "/" in entity_type:
+                    if re.search("/",entity_type):
                         entity_type = entity_type.replace("/","_")
                         print("New entity type: ", entity_type)
 
@@ -177,3 +177,7 @@ def process_receipt(event, context):
        source_blob.delete()
    else:
        print('Cannot parse the file type.')
+       #TODO: test this: delete file if file type is not supported
+       bucket = storage_client.bucket(event['bucket'])
+       blob = bucket.blob(event['name'])
+       blob.delete()
