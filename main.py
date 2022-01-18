@@ -27,6 +27,7 @@ kg_futures = []
 address_substring = "address"
 gcs_output_uri = f"gs://{project_id}-output-receipts"
 gcs_archive_bucket_name = f"{project_id}-archived-receipts"
+gcs_rejected_bucket_name = f"{project_id}-rejected-files"
 destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
 name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
 dataset_name = 'expense_parser_results'
@@ -177,7 +178,9 @@ def process_receipt(event, context):
        source_blob.delete()
    else:
        print('Cannot parse the file type.')
-       #TODO: test this: delete file if file type is not supported
-       bucket = storage_client.bucket(event['bucket'])
-       blob = bucket.blob(event['name'])
-       blob.delete()
+       #move file to designated bucket if file type is not supported
+       source_bucket = storage_client.bucket(event['bucket'])
+       source_blob = source_bucket.blob(event['name'])
+       destination_bucket = storage_client.bucket(gcs_rejected_bucket_name)
+       source_bucket.copy_blob(source_blob, destination_bucket, event['name'])
+       source_blob.delete()
