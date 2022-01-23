@@ -4,6 +4,7 @@
 Learn how to use Google Cloud Platform to construct a pipeline to process expenses (ie. receipts). 
 
 # Visualizing workflow
+![GCP Workflow](https://user-images.githubusercontent.com/47513414/150703075-8f608859-436e-4c22-8dc9-f71121705f3a.png)
 
 # GCP Services used in the Demo
 * [Google Cloud Procurement Document AI](https://cloud.google.com/solutions/procurement-doc-ai)
