@@ -31,6 +31,7 @@ Learn how to use Google Cloud Platform to construct a pipeline to process expens
         * BigQuery Admin
         * Document AI API User
     7. Click **Done** and you should see this service account in the IAM main page 
+       ![Service account on IAM main page](https://user-images.githubusercontent.com/47513414/150855283-cd78ba61-cada-4e2b-a35c-68accbde5eff.png)
 
 5. Create your Doc AI processor
 
