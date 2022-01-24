@@ -109,13 +109,7 @@ def process_receipt(event, context):
            # Download the contents of this blob as a bytes object.
            if ".json" not in blob.name:
                 print(f"Skipping non-supported file type: {blob.name}")
-           else:
-                #Setting the output file name based on the input file name
-                print("Fetching from: " + blob.name)
-                #start = blob.name.rfind("/") + 1
-                #end = blob.name.rfind(".") + 1           
-                #input_filename = blob.name[start:end:] + "gif" #TODO: why is this gif and do we need to store input file names?
-      
+           else:      
                 # Getting ready to read the output of the parsed document - setting up "document"
                 blob_as_string = blob.download_as_string()
                 document = documentai.types.Document.from_json(blob_as_string)
