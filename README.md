@@ -31,12 +31,21 @@ Learn how to use Google Cloud Platform to construct a pipeline to process expens
         * BigQuery Admin
         * Document AI API User
     7. Click **Done** and you should see this service account in the IAM main page 
-5. Activate your Command Shell and clone this GitHub Repo in your Command shell using the command:
+
+5. Create your Doc AI processor
+
+    * At this point, you should have your request in Step 3 approved and have access to expense parser
+    * Navigate to **console** -> **Document AI** -> **processors**
+    * Click **Create processor** and choose **expense parser**
+    * Name your processor and click **Create**
+    * Take note of your processor's region (eg. us) and processor ID
+
+6. Activate your Command Shell and clone this GitHub Repo in your Command shell using the command:
 ```
 git clone https://github.com/jiya-zhang/docai-expense-parser-demo
 ```
 
-6. Execute Bash shell scripts in your Cloud Shell terminal to create cloud resources (i.e Google Cloud Storage Buckets, Pub/Sub topics, Cloud Functions, BigQuery dataset and table)
+7. Execute Bash shell scripts in your Cloud Shell terminal to create cloud resources (i.e Google Cloud Storage Buckets, Pub/Sub topics, Cloud Functions, BigQuery dataset and table)
 
     1. Change directory to the scripts folder
 
@@ -58,17 +67,25 @@ git clone https://github.com/jiya-zhang/docai-expense-parser-demo
         ```
         chmod +x set-up-pipeline.sh
         ```
-    6. Execute your .sh files to create cloud resources
+    6. Change directory to the cloud functions folder
+
         ```
+        cd cloud-functions
+        ```
+    7. Update the following values in .env.yaml (from your note in Step 5):
+
+        * PARSER_LOCATION
+        * PROCESSOR_ID
+        ```
+        vim .env.yaml
+        ```
+
+    9. Go back to the original folder and execute your .sh files to create cloud resources
+        ```
+        cd ..
         ./set-up-pipeline.sh
         ```
 
-7. Create your Doc AI processor
-
-    * At this point, you should have your request in Step 3 approved and have access to expense parser
-    * Navigate to **console** -> **Document AI** -> **processors**
-    * Click **Create processor** and choose **expense parser**
-    * Name your processor and click **Create**
 
 8. Testing/Validating the demo
 
