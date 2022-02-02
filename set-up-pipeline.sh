@@ -14,13 +14,15 @@ gsutil mb -p ${PROJECT_ID} -c standard -l ${BUCKET_LOCATION} -b on gs://${PROJEC
 # create output bucket
 gsutil mb -p ${PROJECT_ID} -c standard -l ${BUCKET_LOCATION} -b on gs://${PROJECT_ID}-output-receipts
 
+# create bucket to store rejected files
+gsutil mb -p ${PROJECT_ID} -c standard -l ${BUCKET_LOCATION} -b on gs://${PROJECT_ID}-rejected-files
 
 # create bq table
 bq --location=US mk  -d \
---description "Expense Parser Results" \
-${PROJECT_ID}:expense_parser_results
+--description "Parsing Results" \
+${PROJECT_ID}:${BQ_DATASET_NAME}
 
-bq mk --table expense_parser_results.doc_ai_extracted_entities table-schema/doc_ai_extracted_entities.json
+bq mk --table ${BQ_DATASET_NAME}.${BQ_TABLE_NAME} table-schema/doc_ai_extracted_entities.json
 
 # deploy Cloud Function
 gcloud functions deploy process-receipts \

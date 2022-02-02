@@ -9,29 +9,20 @@ from google.cloud import storage
 from google.cloud import pubsub_v1
  
 # Read environment variables
-gcs_output_uri_prefix = os.environ.get('GCS_OUTPUT_URI_PREFIX')
 project_id = os.environ.get('GCP_PROJECT')
 location = os.environ.get('PARSER_LOCATION')
 processor_id = os.environ.get('PROCESSOR_ID')
-#geocode_request_topicname = os.environ.get('GEOCODE_REQUEST_TOPICNAME')
-#kg_request_topicname = os.environ.get('KG_REQUEST_TOPICNAME')
 timeout = int(os.environ.get('TIMEOUT'))
-
-# TODO: what is this
-# An array of Future objects
-# Every call to publish() returns an instance of Future
-geocode_futures = []
-kg_futures = []
+dataset_name = os.environ.get('BQ_DATASET_NAME')
+table_name = os.environ.get('BQ_TABLE_NAME')
 
 # Set variables
 address_substring = "address"
 gcs_output_uri = f"gs://{project_id}-output-receipts"
+gcs_output_bucket_name = f"{project_id}-output-receipts"
 gcs_archive_bucket_name = f"{project_id}-archived-receipts"
 gcs_rejected_bucket_name = f"{project_id}-rejected-files"
-destination_uri = f"{gcs_output_uri}/{gcs_output_uri_prefix}/"
 name = f"projects/{project_id}/locations/{location}/processors/{processor_id}"
-dataset_name = 'expense_parser_results'
-table_name = 'doc_ai_extracted_entities'
 accepted_file_types = ["application/pdf","image/jpg","image/png","image/gif","image/tiff","image/jpeg","image/tif","image/webp","image/bmp"]
 
 # Create GCP clients
@@ -82,7 +73,7 @@ def process_receipt(event, context):
    if event['contentType'] in accepted_file_types:
        input_config = documentai.types.document_processor_service.BatchProcessRequest.BatchInputConfig(gcs_source=gcs_input_uri, mime_type=event['contentType'])
        # Where to write results
-       output_config = documentai.types.document_processor_service.BatchProcessRequest.BatchOutputConfig(gcs_destination=destination_uri)
+       output_config = documentai.types.document_processor_service.BatchProcessRequest.BatchOutputConfig(gcs_destination=gcs_output_uri)
  
        request = documentai.types.document_processor_service.BatchProcessRequest(
            name=name,
@@ -96,14 +87,14 @@ def process_receipt(event, context):
        operation.result(timeout=timeout)
        print("Entities extracted from DocAI.")
  
-       match = re.match(r"gs://([^/]+)/(.+)", destination_uri)
-       output_bucket = match.group(1)
-       prefix = match.group(2)
+       #match = re.match(r"gs://([^/]+)/(.+)", destination_uri)
+       #output_bucket = match.group(1)
+       #prefix = match.group(2)
       
        #Get a pointer to the GCS bucket where the output will be placed
-       bucket = storage_client.get_bucket(output_bucket)
+       bucket = storage_client.get_bucket(gcs_output_bucket_name)
       
-       blob_list = list(bucket.list_blobs(prefix=prefix))
+       blob_list = list(bucket.list_blobs())
  
        for blob in blob_list:
            # Download the contents of this blob as a bytes object.
@@ -121,7 +112,7 @@ def process_receipt(event, context):
                 for entity in document.entities:
                     entity_type = str(entity.type_)
                     # TODO: this might not be working
-                    if re.search("/",entity_type):
+                    if '/' in entity_type:
                         entity_type = entity_type.replace("/","_")
                         print("New entity type: ", entity_type)
 
@@ -133,48 +124,26 @@ def process_receipt(event, context):
                       entity_text = str(entity.mention_text)
                       entities_extracted_dict[entity_type] = entity_text
 
-                    """
-                    # Creating and publishing a message via Pub Sub
-                    if (address_substring in entity_type) or entity_type == "supplier_name":
-                        print(input_filename)
-                        message = {
-                        "entity_type": entity_type,
-                        "entity_text" : entity_text,
-                        "input_file_name": input_filename,
-                        }
-                        message_data = json.dumps(message).encode("utf-8")
-                        
-                       
-                        if address_substring in entity_type:
-                          geocode_topic_path = pub_client.topic_path(project_id,geocode_request_topicname)
-                          geocode_future = pub_client.publish(geocode_topic_path, data = message_data)
-                          geocode_futures.append(geocode_future)
-                        else:
-                          kg_topic_path = pub_client.topic_path(project_id,kg_request_topicname)
-                          kg_future = pub_client.publish(kg_topic_path, data = message_data)
-                          kg_futures.append(kg_future)                 
-                    """
-
                 print("Writing to BQ.")
                 # Write the entities to BQ
                 write_to_bq(dataset_name, table_name, entities_extracted_dict)
                 
-       #Deleting the intermediate files created by the Doc AI Parser
-       blobs = bucket.list_blobs(prefix=gcs_output_uri_prefix)
+       # Delete the intermediate files created by the Doc AI Parser
+       blobs = bucket.list_blobs()
        for blob in blobs:
             blob.delete()
-       #Copy input file to archive bucket
-       source_bucket = storage_client.bucket(event['bucket'])
-       source_blob = source_bucket.blob(event['name'])
-       destination_bucket = storage_client.bucket(gcs_archive_bucket_name)
-       blob_copy = source_bucket.copy_blob(source_blob, destination_bucket, event['name'])
-       #delete from the input folder
-       source_blob.delete()
+       # Copy input file to archive bucket
+       copy_blob(event['bucket'],gcs_archive_bucket_name, event['name'])
    else:
        print('Cannot parse the file type.')
-       #move file to designated bucket if file type is not supported
-       source_bucket = storage_client.bucket(event['bucket'])
-       source_blob = source_bucket.blob(event['name'])
-       destination_bucket = storage_client.bucket(gcs_rejected_bucket_name)
-       source_bucket.copy_blob(source_blob, destination_bucket, event['name'])
-       source_blob.delete()
+       # move file to designated bucket if file type is not supported
+       copy_blob(event['bucket'],gcs_rejected_bucket_name, event['name'])
+
+def copy_blob(source_bucket_name, dest_bucket_name, blob_name):
+    source_bucket = storage_client.bucket(source_bucket_name)
+    dest_bucket = storage_client.bucket(dest_bucket_name)
+    blob = source_bucket.blob(blob_name)
+
+    source_bucket.copy_blob(blob, dest_bucket, blob_name)
+    blob.delete()
+    return

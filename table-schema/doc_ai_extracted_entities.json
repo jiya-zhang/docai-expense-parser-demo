@@ -60,18 +60,22 @@
       "type": "STRING"
     },
     {
+      "mode": "NULLABLE",
       "name": "line_item",
       "type": "STRING"
     },
     {
+        "mode": "NULLABLE",
         "name": "line_item_amount",
         "type": "STRING"
       },    
     {
+        "mode": "NULLABLE",
         "name": "line_item_description",
         "type": "STRING"
     },    
     {
+        "mode": "NULLABLE",
         "name": "line_item_product_code",
         "type": "STRING"
     }
