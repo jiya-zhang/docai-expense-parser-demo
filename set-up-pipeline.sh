@@ -5,14 +5,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source "${DIR}/.env.local"
 
-# create archive bucket
-gsutil mb -p ${PROJECT_ID} -c standard -l ${BUCKET_LOCATION} -b on gs://${PROJECT_ID}-archived-receipts
-
 # create input bucket
 gsutil mb -p ${PROJECT_ID} -c standard -l ${BUCKET_LOCATION} -b on gs://${PROJECT_ID}-input-receipts
 
-# create output bucket
-gsutil mb -p ${PROJECT_ID} -c standard -l ${BUCKET_LOCATION} -b on gs://${PROJECT_ID}-output-receipts
+# create archive bucket
+gsutil mb -p ${PROJECT_ID} -c standard -l ${BUCKET_LOCATION} -b on gs://${PROJECT_ID}-archived-receipts
 
 # create bucket to store rejected files
 gsutil mb -p ${PROJECT_ID} -c standard -l ${BUCKET_LOCATION} -b on gs://${PROJECT_ID}-rejected-files
@@ -22,10 +19,10 @@ bq --location=US mk  -d \
 --description "Parsing Results" \
 ${PROJECT_ID}:${BQ_DATASET_NAME}
 
-bq mk --table ${BQ_DATASET_NAME}.${BQ_TABLE_NAME} table-schema/doc_ai_extracted_entities.json
+bq mk --table ${BQ_DATASET_NAME}.${BQ_TABLE_NAME} table-schema/bq_schema.json
 
 # deploy Cloud Function
-gcloud functions deploy process-receipts \
+gcloud functions deploy ${CLOUD_FUNCTION_NAME} \
 --ingress-settings=${INGRESS_SETTINGS} \
 --region=${CLOUD_FUNCTION_LOCATION} \
 --entry-point=process_receipt \
