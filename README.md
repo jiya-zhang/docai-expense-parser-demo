@@ -1,7 +1,7 @@
 # DocAI Expense Parser Demo
 
 # Objective
-Learn how to use Google Cloud Platform to construct a pipeline to process expenses (ie. receipts). 
+Learn how to use Google Cloud Platform to construct a pipeline to process expenses (ie. receipts). This repo serves as a sample code to build your own demo but is not tested for production. 
 
 # Visualizing the workflow
 ![GCP Workflow](https://user-images.githubusercontent.com/47513414/150703075-8f608859-436e-4c22-8dc9-f71121705f3a.png)
