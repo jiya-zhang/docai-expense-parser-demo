@@ -1,5 +1,9 @@
 # DocAI Expense Parser Demo
 
+# Before Starting
+Make sure you are on the correct branch. 
+Branch "v1api" uses the newer version of documentai API and has a different BigQuery schema. It also showcases single document processing as opposed to batch document processing and thus works faster.
+
 # Objective
 Learn how to use Google Cloud Platform to construct a pipeline to process expenses (ie. receipts). 
 
